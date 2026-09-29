@@ -240,7 +240,10 @@
   .err { color: var(--c-red); font-size: .85em; font-weight: 600; min-height: 1em; }
   .view-body { padding: 10px 20px 20px; }
   .view-body .meta { color: var(--text-2); margin: 4px 0 12px; }
-  .view-body .desc { white-space: pre-wrap; line-height: 1.6; }
+  .view-body .desc { white-space: pre-wrap; line-height: 1.6; font-size: 1.05em; }
+  .view-body .desc.none { color: var(--text-3); }
+  .view-body .actions { margin-top: 16px; }
+  .bar .note { margin-left: .35em; font-size: .8em; }
 
   .toast {
     position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px); opacity: 0;
@@ -306,7 +309,6 @@
       <label>시작일 *<input type="date" name="start_date" required></label>
       <label>종료일 *<input type="date" name="end_date" required></label>
     </div>
-    <label>담당자<input type="text" name="assignee" maxlength="50" placeholder="예) 김대리, 박주임"></label>
     <div>
       <div style="font-size:.85em;font-weight:700;color:var(--text-2);margin-bottom:6px">분류</div>
       <div class="chips" id="catChips"></div>
@@ -326,7 +328,11 @@
 <!-- 보기 (TV 모드) -->
 <dialog id="viewDlg">
   <div class="dlg-head"><h3 id="vTitle"></h3><button class="btn icon" data-close aria-label="닫기">✕</button></div>
-  <div class="view-body"><div class="meta" id="vMeta"></div><div class="desc" id="vDesc"></div></div>
+  <div class="view-body">
+    <div class="meta" id="vMeta"></div>
+    <div class="desc" id="vDesc"></div>
+    <div class="actions edit-only"><div class="spacer"></div><button type="button" class="btn primary" id="vEdit">수정</button></div>
+  </div>
 </dialog>
 
 <!-- PIN -->
@@ -434,18 +440,17 @@
     return cls;
   }
 
-  // 업무 한 건: 제목 / 담당자·기간 / 상세 내용 전부 표시
+  // 업무 한 건: 제목 / 기간만 표시 (상세 내용은 클릭하면 창으로)
   function barEl(e, extraCls = '') {
     const bar = document.createElement('div');
     bar.className = `bar ${catClass(e.category)}${e.done ? ' done' : ''}${extraCls}`;
     const t = document.createElement('div'); t.className = 't'; t.textContent = e.title;
+    if (e.content) { const n = document.createElement('span'); n.className = 'note'; n.textContent = '📝'; n.title = '상세 내용 있음'; t.append(n); }
     bar.append(t);
     const bits = [];
-    if (e.assignee) bits.push(e.assignee);
     if (e.start_date !== e.end_date) bits.push(`${fmtShort(e.start_date)}~${fmtShort(e.end_date)}`);
     if (e.done) bits.push('완료');
     if (bits.length) { const m = document.createElement('div'); m.className = 'm'; m.textContent = bits.join(' · '); bar.append(m); }
-    if (e.content) { const c = document.createElement('div'); c.className = 'c'; c.textContent = e.content; bar.append(c); }
     bar.addEventListener('click', (ev) => { ev.stopPropagation(); openEvent(e); });
     return bar;
   }
@@ -566,16 +571,19 @@
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
   document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
 
+  // 업무 클릭 → 상세 내용 창 (편집 모드에서는 수정 버튼 포함)
+  let viewing = null;
   function openEvent(e) {
-    if (state.tv) {
-      $('vTitle').textContent = e.title;
-      $('vMeta').textContent = [fmtRange(e), e.assignee, CATS.find(c => c.key === e.category)?.label, e.done ? '완료' : ''].filter(Boolean).join(' · ');
-      $('vDesc').textContent = e.content || '';
-      $('viewDlg').showModal();
-      clearTimeout(openEvent._t);
-      openEvent._t = setTimeout(() => $('viewDlg').close(), 20000);
-    } else openEdit(e);
+    viewing = e;
+    $('vTitle').textContent = e.title;
+    $('vMeta').textContent = [fmtRange(e), CATS.find(c => c.key === e.category)?.label, e.done ? '완료' : ''].filter(Boolean).join(' · ');
+    $('vDesc').textContent = e.content || '상세 내용이 없습니다.';
+    $('vDesc').classList.toggle('none', !e.content);
+    $('viewDlg').showModal();
+    clearTimeout(openEvent._t);
+    if (state.tv) openEvent._t = setTimeout(() => $('viewDlg').close(), 20000); // TV는 20초 뒤 자동 닫힘
   }
+  $('vEdit').addEventListener('click', () => { $('viewDlg').close(); if (viewing) openEdit(viewing); });
 
   function openEdit(e, date) {
     const f = $('editForm');
@@ -588,7 +596,6 @@
     f.title.value = e?.title || '';
     f.start_date.value = e?.start_date || d;
     f.end_date.value = e?.end_date || d;
-    f.assignee.value = e?.assignee || '';
     f.content.value = e?.content || '';
     f.done.checked = !!e?.done;
     const cat = e?.category || 'blue';
@@ -645,7 +652,7 @@
       p_content: f.content.value.trim(),
       p_start_date: f.start_date.value,
       p_end_date: f.end_date.value,
-      p_assignee: f.assignee.value.trim(),
+      p_assignee: '',
       p_category: f.querySelector('input[name=category]:checked')?.value || 'blue',
       p_done: f.done.checked,
     };
