@@ -85,7 +85,6 @@
     padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--line);
   }
   .brand { font-weight: 800; font-size: 1.15em; margin-right: 4px; }
-  .range-title { font-size: 1.15em; font-weight: 700; color: var(--text-2); }
   .nav { display: flex; gap: 4px; }
   .btn {
     border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
@@ -97,9 +96,6 @@
   .btn.primary:hover { filter: brightness(1.07); }
   .btn.danger { color: var(--c-red); }
   .spacer { flex: 1; }
-  .legend { display: flex; gap: 10px; flex-wrap: wrap; color: var(--text-2); font-size: .8em; }
-  .legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
   .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
   .status.live i { background: #22b35e; box-shadow: 0 0 0 3px rgba(34,179,94,.18); }
@@ -115,15 +111,12 @@
   body.tv header { flex-wrap: nowrap; gap: calc(var(--fs) * .7); padding: calc(var(--fs) * .35) calc(var(--fs) * .9); }
   body.tv header > * { flex-shrink: 0; }
   body.tv .brand { font-size: 1.1em; margin: 0; }
-  body.tv .range-title { font-size: .95em; }
   body.tv .nav { display: none; }
   body.tv .btn { font-size: .7em; min-height: 0; padding: .35em .8em; }
-  body.tv .legend { font-size: .72em; flex-wrap: nowrap; flex-shrink: 1; min-width: 0; overflow: hidden; }
   body.tv .status { font-size: .65em; }
   body.tv .clock { font-size: 1.15em; }
   body.tv .qr { font-size: .6em; }
   body.tv #qrbox canvas, body.tv #qrbox img { width: calc(var(--fs) * 3.4) !important; height: calc(var(--fs) * 3.4) !important; }
-  @media (max-width: 1250px) { body.tv .legend { display: none; } }
   body.tv main { padding: calc(var(--fs) * .5) calc(var(--fs) * .8) calc(var(--fs) * .6); }
   body.tv .weeks { gap: calc(var(--fs) * .45); }
   body.tv .dhead { padding: .4em .5em .2em; gap: .3em; }
@@ -257,8 +250,7 @@
     :root { --fs: 15px; }
     header { padding: 10px 16px; gap: 8px; position: sticky; top: 0; z-index: 10; }
     .brand { font-size: 1.05em; width: 100%; }
-    .legend, .tv-toggle, .header-add, .qr { display: none; }
-    .range-title { font-size: .95em; }
+    .tv-toggle, .header-add, .qr { display: none; }
     .app { height: auto; min-height: 100dvh; }
     main { padding: 12px 16px 100px; }
     .weeks { display: none; }
@@ -282,8 +274,6 @@
       <button class="btn" id="todayBtn">오늘</button>
       <button class="btn icon" id="next" aria-label="다음 주">›</button>
     </div>
-    <div class="range-title" id="rangeTitle"></div>
-    <div class="legend" id="legend"></div>
     <div class="spacer"></div>
     <span class="status" id="status"><i></i><span>연결 중</span></span>
     <div class="clock" id="clock"></div>
@@ -395,7 +385,6 @@
   document.title = CFG.TITLE; $('brand').textContent = CFG.TITLE;
   if (state.tv) document.body.classList.add('tv');
 
-  $('legend').innerHTML = CATS.map(c => `<span class="c-${c.key}"><i style="background:var(--ev-fg)"></i>${c.label}</span>`).join('');
   $('catChips').innerHTML = CATS.map((c, i) =>
     `<label class="c-${c.key}"><input type="radio" name="category" value="${c.key}" ${i === 0 ? 'checked' : ''}><span>${c.label}</span></label>`).join('');
 
@@ -420,7 +409,6 @@
 
   // ---------- render ----------
   function render() {
-    $('rangeTitle').textContent = `${fmtMD(state.start)} ~ ${fmtMD(rangeEnd())}`;
     renderWeeks();
     renderAgenda();
   }
