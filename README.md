@@ -7,6 +7,8 @@
 - `config.js` — Supabase 주소와 공개(publishable) 키
 
 ## 사용법
+배포 주소: https://dla6154-dev.github.io/jindo-calendar/ (GitHub Pages, `main` 브랜치에 push하면 1~2분 뒤 반영)
+
 | 용도 | 주소 |
 |---|---|
 | 사무실 화면(TV) | `https://<배포주소>/?tv=1` — 오늘부터 2주를 7일×2줄로 표시, 업무 내용 전체 표시, 편집 버튼 숨김, 시계·QR 표시, 더블클릭하면 전체화면 |
